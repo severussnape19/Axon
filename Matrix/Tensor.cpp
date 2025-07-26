@@ -2,7 +2,7 @@
 #include<vector>
 #include<initializer_list>
 #include<tuple>
-#include<stdexcept> // For std::invalid_argument
+#include<stdexcept>
 
 template<typename T>
 class Tensor 
