@@ -2,7 +2,7 @@
 #include<vector>
 #include<initializer_list>
 #include<tuple>
-#include<stdexcept> // For std::invalid_argument
+#include<stdexcept>
 
 template<typename T>
 class Tensor 
@@ -15,7 +15,6 @@ public:
     Tensor(const std::vector<size_t>& shapeInput, const std::vector<T>& dataInput)
         : shape(shapeInput), data(dataInput) {}
 
-    // Tensor<T> is the return type of the function
     Tensor<T> operator+(const Tensor<T>& other) const {
         if (shape != other.shape) {
             throw std::invalid_argument("Shapes do not match for addition.");
@@ -23,6 +22,17 @@ public:
         std::vector<T> resultData(data.size());
         for (size_t i = 0; i < data.size(); ++i) {
             resultData[i] = data[i] + other.data[i];
+        }
+        return Tensor<T>(shape, resultData);
+    }
+
+    Tensor<T> operator-(const Tensor<T>& other) const {
+        if(shape != other.shape) {
+            throw std::invalid_argument("Shapes do not match for subtraction.");
+        }
+        std::vector<T> resultData(data.size());
+        for(size_t i = 0; i < data.size(); ++i) {
+            resultData[i] = data[i] - other.data[i];
         }
         return Tensor<T>(shape, resultData);
     }
@@ -99,7 +109,7 @@ int main()
 {
     std::vector<int> vec1, vec2;
     int val = 0;
-
+/*
     for (int i = 0; i < 9; i++) vec1.push_back(val++);
     for (int i = 0; i < 9; i++) vec2.push_back(val += 2);
 
@@ -115,5 +125,20 @@ int main()
     std::cout << "\nTensor C (A + B):\n";
     C.info();
 
-    std::cin.get();
+    Tensor<int> D = C - B;
+    std::cout << "\nTensor D (C - B):\n";
+    D.info();
+*/
+    val = 0;
+    for(int i = 0; i < 27; i++) vec1.push_back(++val);
+    for(int i = 0; i < 27; i++) vec2.push_back(val *= 2);
+
+    Tensor<int> A({3, 3, 3}, vec1);
+    Tensor<int> B({3, 3, 3}, vec2);
+
+    Tensor<int> C = A + B;
+    Tensor<int> D = B - C;
+
+    C.info();
+    D.info();
 }

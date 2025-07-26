@@ -27,6 +27,17 @@ public:
         return Tensor<T>(shape, resultData);
     }
 
+    Tensor<T> operator-(const Tensor<T>& other) const {
+        if(shape != other.shape) {
+            throw std::invalid_argument("Shapes do not match for subtraction.");
+        }
+        std::vector<T> resultData(data.size());
+        for(size_t i = 0; i < data.size(); ++i) {
+            resultData[i] = data[i] - other.data[i];
+        }
+        return Tensor<T>(shape, resultData);
+    }
+
     void setShape(const std::vector<size_t>& newShape) {
         shape = newShape;
     }
@@ -114,6 +125,10 @@ int main()
     Tensor<int> C = A + B;
     std::cout << "\nTensor C (A + B):\n";
     C.info();
+
+    Tensor<int> D = C - B;
+    std::cout << "\nTensor D (C - B):\n"
+    D.info();
 
     std::cin.get();
 }
