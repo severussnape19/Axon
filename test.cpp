@@ -2,15 +2,11 @@
 #include<vector>
 #include<initializer_list>
 
-// size_t is used instead of int so that the input shape of the tensor is never a negative.
-// size_t only has a positive value.(size_t is a data type).
-
-// <T> stores the actual tensor values
 template<typename T>
 class Tensor 
 {
     private:
-        std::vector<size_t> shape; //dim
+        std::vector<size_t> shape;
         std::vector<T> data;
     
     public:
@@ -31,7 +27,7 @@ class Tensor
             std::cout << "Shape: ";
             for(int i : shape) std::cout << i << " ";
 
-            std::cout << "\nData: ";
+            std::cout << "\nData: \n";
             if(shape.size() == 2) {
                 size_t rows = shape[0];
                 size_t cols = shape[1];
@@ -60,10 +56,11 @@ int main()
     std::vector<int> vec;
     int val = 0;
     for(int i = 0; i < 9; i++) {
-        vec[i] = val++;
+        vec.push_back(val++);
     }
-    Tensor<int> tensor2D({3, 3}, vec)
+    Tensor<int> tensor2D({3, 3}, vec);
 
     tensor2D.print();
 
+    std::cin.get();
 }
