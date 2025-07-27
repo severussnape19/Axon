@@ -17,11 +17,11 @@ private:
             throw std::invalid_argument(") dimensional tensor or uninitialized tensor");
 
         stride.resize(shape.size());
-        size_t running_product = 1;
+        size_t str_idx_val = 1;
 
         for(int i = shape.size() - 1; i >= 0; --i) {
-            stride[i] = running_product;
-            running_product *= shape[i];
+            stride[i] = str_idx_val;
+            str_idx_val *= shape[i];
         }
     }
 
@@ -35,6 +35,7 @@ public:
 
     void setShape(const std::vector<size_t>& newShape) {
         shape = newShape;
+        computeStride();
     }
 
     void setData(const std::vector<T>& newData) {
@@ -57,8 +58,8 @@ public:
         }
         std::cout << ")\n";
     }
-        // Operators 
-        // +,-,* and Dot product
+
+public:
     Tensor<T> operator+(const Tensor<T>& other) const {
         if (shape != other.shape) {
             throw std::invalid_argument("Shapes do not match for addition.");
@@ -92,8 +93,18 @@ public:
         return Tensor<T>(shape, resultData);
     }
 
-    // Determinent of matrices. (We can't find det of tensors.).
+    Tensor<T> operator/(const Tensor<T>& other) const {
+        if(shape != other.shape) {
+            throw std::invalid_argument("Shapes do not match for this operation.");
+        }
+        std::vector<T> resultData(data.size());
+        for(size_t i = 0; i < data.size(); ++i) {
+            resultData[i] = data[i] / other.data[i];
+        }
+        return Tensor<T>(shape, resultData);
+    }
 
+    // Determinent.
     Tensor<T> getMinor(size_t row, size_t col) const {
         std::vector<T> minorData;
         size_t n = shape[0];
@@ -109,7 +120,7 @@ public:
         return Tensor<T>({n-1, n-1}, minorData);
     }
 
-    Tensor<T> det() const {
+    T& det() const {
         int n = shape[0];
 
         if(shape.size() != 2 || shape[0] != shape[1]) {
@@ -153,6 +164,7 @@ public:
         return Tensor<T>({rows1, cols2}, resultData);
     }
 
+public:
     void info() const {
         std::cout << "Shape: (";
         for (size_t i = 0; i < shape.size(); ++i) {
@@ -202,6 +214,17 @@ public:
         else {
             std::cout << "Tensor printing not implemented for " << shape.size() << "D yet.\n";
         }
+    }
+    T& at(size_t i, size_t j) {
+        size_t idx = i * stride[0] + j * stride[1];
+        std::cout << data[idx] << std::endl;
+        return data[idx];
+    }
+
+    T& at(size_t i,size_t j, size_t k) {
+        size_t idx = i * stride[0] + j * stride[1] + k * stride[2];
+        std::cout << data[idx] << std::endl;
+        return data[idx];
     }
 };
 
