@@ -9,13 +9,56 @@ class Tensor
 {
 private:
     std::vector<size_t> shape;
+    std::vector<size_t> stride;
     std::vector<T> data;
+
+    void computeStride() {
+        if (shape.empty()) 
+            throw std::invalid_argument(") dimensional tensor or uninitialized tensor");
+
+        stride.resize(shape.size());
+        size_t running_product = 1;
+
+        for(int i = shape.size() - 1; i >= 0; --i) {
+            stride[i] = running_product;
+            running_product *= shape[i];
+        }
+    }
 
 public:
     Tensor(const std::vector<size_t>& shapeInput, const std::vector<T>& dataInput)
-        : shape(shapeInput), data(dataInput) {}
+        : shape(shapeInput), data(dataInput) {
+            computeStride();
+        }
 
-    // Tensor<T> is the return type of the function
+        //Setters and getters.
+
+    void setShape(const std::vector<size_t>& newShape) {
+        shape = newShape;
+    }
+
+    void setData(const std::vector<T>& newData) {
+        data = newData;
+    }
+
+    std::vector<size_t> getShape() const {
+        return shape;
+    }
+
+    std::vector<T> getData() const {
+        return data;
+    }
+
+    void getStride() const {
+        std::cout << "Stride: (";
+        for(size_t i = 0; i < stride.size(); ++i) {
+            std::cout << stride[i];
+            if(i != stride.size() - 1) std::cout << ",";
+        }
+        std::cout << ")\n";
+    }
+        // Operators 
+        // +,-,* and Dot product
     Tensor<T> operator+(const Tensor<T>& other) const {
         if (shape != other.shape) {
             throw std::invalid_argument("Shapes do not match for addition.");
@@ -38,20 +81,76 @@ public:
         return Tensor<T>(shape, resultData);
     }
 
-    void setShape(const std::vector<size_t>& newShape) {
-        shape = newShape;
+    Tensor<T> operator*(const Tensor<T>& other) const {
+        if(shape != other.shape) {
+            throw std::invalid_argument("Shapes do not match for matrix multiplication.");
+        }
+        std::vector<T> resultData(data.size());
+        for(size_t i = 0; i < data.size(); ++i) {
+            resultData[i] = data[i] * other.data[i];
+        }
+        return Tensor<T>(shape, resultData);
     }
 
-    void setData(const std::vector<T>& newData) {
-        data = newData;
+    // Determinent of matrices. (We can't find det of tensors.).
+
+    Tensor<T> getMinor(size_t row, size_t col) const {
+        std::vector<T> minorData;
+        size_t n = shape[0];
+
+        for (size_t i = 0; i < n; ++i) {
+            if(i == row) continue;
+            for(size_t j = 0; j < n; ++j) {
+                if(j == col) continue;
+                minorData.push_back(data[i * n + j]);
+            }
+        }
+
+        return Tensor<T>({n-1, n-1}, minorData);
     }
 
-    std::vector<size_t> getShape() const {
-        return shape;
+    Tensor<T> det() const {
+        int n = shape[0];
+
+        if(shape.size() != 2 || shape[0] != shape[1]) {
+            throw std::invalid_argument("Determinant is only defined for 2D tensors.");
+        }
+
+        if(n == 1) return data[0];
+        if(n == 2) return data[0] * data[3] - data[1] * data[2];
+
+        T dett = 0;
+        for(size_t col = 0; col < n; ++col) {
+            Tensor<T> minor = getMinor(0, col);
+            T sign = (col % 2 == 0) ? 1 : -1;
+            dett += sign * data[col] * minor.det();
+        }
+
+        return dett;
     }
 
-    std::vector<T> getData() const {
-        return data;
+    Tensor<T> dot(const Tensor<T>& other) const {
+        
+        size_t rows1 = shape[0];
+        size_t cols1 = shape[1];
+        size_t rows2 = other.shape[0];
+        size_t cols2 = other.shape[1];
+
+        if(cols1 != rows2) {
+            throw std::invalid_argument("Shape mismatch.\nCannot perform dot product.");
+        }
+
+        std::vector<T> resultData(rows1 * cols2, 0);
+        
+        // Dot
+        for(int i = 0; i < rows1; ++i) {
+            for(int j = 0; j < cols2; ++j) {
+                for(int k = 0; k < cols1; ++k) {
+                    resultData[i * cols2 + j] += data[i * cols1 + k] * other.data[k * cols2 + j];
+                }
+            }
+        }
+        return Tensor<T>({rows1, cols2}, resultData);
     }
 
     void info() const {
@@ -127,8 +226,11 @@ int main()
     C.info();
 
     Tensor<int> D = C - B;
-    std::cout << "\nTensor D (C - B):\n"
+    std::cout << "\nTensor D (C - B):\n";
     D.info();
+    D.getStride();
 
-    std::cin.get();
+    std::cout << "Dot product of D and A:\n ";
+    (D.dot(A)).info();
+
 }
