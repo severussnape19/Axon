@@ -15,6 +15,26 @@ public:
     Tensor(const std::vector<size_t>& shapeInput, const std::vector<T>& dataInput)
         : shape(shapeInput), data(dataInput) {}
 
+        //Setters and getters.
+
+    void setShape(const std::vector<size_t>& newShape) {
+        shape = newShape;
+    }
+
+    void setData(const std::vector<T>& newData) {
+        data = newData;
+    }
+
+    std::vector<size_t> getShape() const {
+        return shape;
+    }
+
+    std::vector<T> getData() const {
+        return data;
+    }
+
+        // Operators 
+        // +,-,* and Dot product
     Tensor<T> operator+(const Tensor<T>& other) const {
         if (shape != other.shape) {
             throw std::invalid_argument("Shapes do not match for addition.");
@@ -37,20 +57,75 @@ public:
         return Tensor<T>(shape, resultData);
     }
 
-    void setShape(const std::vector<size_t>& newShape) {
-        shape = newShape;
+    Tensor<T> operator*(const Tensor<T>& other) const {
+        if(shape != other.shape) {
+            throw std::invalid_argument("Shapes do not match for matrix multiplication.");
+        }
+        std::vector<T> resultData(data.size());
+        for(size_t i = 0; i < data.size(); ++i) {
+            resultData[i] = data[i] * other.data[i];
+        }
+        return Tensor<T>(shape, resultData);
     }
 
-    void setData(const std::vector<T>& newData) {
-        data = newData;
+    // Determinent of matrices. (We can't find det of tensors.).
+
+    Tensor<T> getMinor(size_t row, size_t col) const {
+        std::vector<T> minorData;
+        size_t n = shape[0];
+
+        for (size_t i = 0; i < n; ++i) {
+            if(i == row) continue;
+            for(size_t j = 0; j < n; ++j) {
+                if(j == col) continue;
+                minorData.push_back(data[i * n + j]);
+            }
+        }
+
+        return Tensor<T>({n-1, n-1}, minorData);
     }
 
-    std::vector<size_t> getShape() const {
-        return shape;
+    T det() const {
+    int n = shape[0];
+
+    if(shape.size() != 2 || shape[0] != shape[1]) {
+        throw std::invalid_argument("Determinant is only defined for 2D square tensors.");
+    }
+        if(n == 1) return data[0];
+        if(n == 2) return data[0] * data[3] - data[1] * data[2];
+
+        T dett = 0;
+        for(size_t col = 0; col < n; ++col) {
+            Tensor<T> minor = getMinor(0, col);
+            T sign = (col % 2 == 0) ? 1 : -1;
+            dett += sign * data[col] * minor.det();  // Recursive call
+        }
+
+        return dett;
     }
 
-    std::vector<T> getData() const {
-        return data;
+
+    Tensor<T> dot(const Tensor<T>& other) const {
+        
+        size_t rows1 = shape[0];
+        size_t cols1 = shape[1];
+        size_t rows2 = other.shape[0];
+        size_t cols2 = other.shape[1];
+
+        if(cols1 != rows2) {
+            throw std::invalid_argument("Shape mismatch.\nCannot perform dot product.");
+        }
+
+        std::vector<T> resultData(rows1 * cols2, 0);
+        
+        for(int i = 0; i < rows1; ++i) {
+            for(int j = 0; j < cols2; ++j) {
+                for(int k = 0; k < cols1; ++k) {
+                    resultData[i * cols2 + j] += data[i * cols1 + k] * other.data[k * cols2 + j];
+                }
+            }
+        }
+        return Tensor<T>({rows1, cols2}, resultData);
     }
 
     void info() const {
@@ -109,7 +184,7 @@ int main()
 {
     std::vector<int> vec1, vec2;
     int val = 0;
-/*
+
     for (int i = 0; i < 9; i++) vec1.push_back(val++);
     for (int i = 0; i < 9; i++) vec2.push_back(val += 2);
 
@@ -128,17 +203,7 @@ int main()
     Tensor<int> D = C - B;
     std::cout << "\nTensor D (C - B):\n";
     D.info();
-*/
-    val = 0;
-    for(int i = 0; i < 27; i++) vec1.push_back(++val);
-    for(int i = 0; i < 27; i++) vec2.push_back(val *= 2);
 
-    Tensor<int> A({3, 3, 3}, vec1);
-    Tensor<int> B({3, 3, 3}, vec2);
-
-    Tensor<int> C = A + B;
-    Tensor<int> D = B - C;
-
-    C.info();
-    D.info();
+    std::cout << "Dot product of D and A:\n ";
+    (D.dot(A)).info();
 }
