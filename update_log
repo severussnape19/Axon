@@ -1,0 +1,2 @@
+26-07-2025 - Started working on tensor engine with vectors
+30-07-2025 - Rewriting the tensor class with malloc, calloc and realloc for speed. 
